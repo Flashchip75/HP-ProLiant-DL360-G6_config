@@ -1,17 +1,17 @@
 # HP ProLiant DL360 G6 Configuration Guide
 
-This repository provides a comprehensive guide for configuring an HP ProLiant DL360 G6 server, which is anything but trivial. This guide covers the complete setup process with Ubuntu Server 24.04.5 LTS, including firmware updates, licensing, and Docker installation.
+This repository provides a comprehensive guide for configuring an HP ProLiant DL360 G6 server, which is anything but trivial. This guide covers the complete setup process with Ubuntu Server 24.04.5 LTS, including firmware updates, licensing, and the required Docker setup for accessing the legacy iLO2 interface.
 
 ## Table of Contents
 
 - [Overview](#overview)
 - [Prerequisites](#prerequisites)
 - [Configuration Steps](#configuration-steps)
-  - [1. Update iLO2 to Version 2.33](#1-update-ilo2-to-version-233)
-  - [2. Obtain iLO Advanced License](#2-obtain-ilo-advanced-license)
-  - [3. Update BIOS and Dependencies with HP SPP](#3-update-bios-and-dependencies-with-hp-spp)
-  - [4. Install Ubuntu Server 24.04.5 LTS](#4-install-ubuntu-server-24045-lts)
-  - [5. Install Docker](#5-install-docker)
+  - [1. Setup Javafox Docker Container (Required for iLO2 Access)](#1-setup-javafox-docker-container-required-for-ilo2-access)
+  - [2. Update iLO2 to Version 2.33](#2-update-ilo2-to-version-233)
+  - [3. Obtain iLO Advanced License](#3-obtain-ilo-advanced-license)
+  - [4. Update BIOS and Dependencies with HP SPP](#4-update-bios-and-dependencies-with-hp-spp)
+  - [5. Install Ubuntu Server 24.04.5 LTS](#5-install-ubuntu-server-24045-lts)
 - [Troubleshooting](#troubleshooting)
 - [Resources](#resources)
 
@@ -19,21 +19,24 @@ This repository provides a comprehensive guide for configuring an HP ProLiant DL
 
 The HP ProLiant DL360 G6 is a legacy server that requires specific configuration steps to work with modern operating systems. This guide walks you through:
 
+- **Setting up Javafox Docker container** - Required to access the iLO2 web interface (modern browsers don't support the legacy iLO2)
 - Updating the Integrated Lights-Out 2 (iLO2) firmware to the latest version (2.33)
 - Acquiring and installing the required iLO Advanced license for virtual media functionality
 - Updating BIOS and system dependencies using HP Service Pack for ProLiant (SPP)
 - Installing Ubuntu Server 24.04.5 LTS via virtual drive
-- Setting up Docker for containerized applications
 
 ## Prerequisites
 
 Before starting, ensure you have:
 
 - HP ProLiant DL360 G6 server with network connectivity
-- Access to the iLO2 web interface
+- A computer with Docker installed (required to run Javafox for iLO2 access)
+- Network access to the iLO2 IP address from your computer
 - Approximately 11€ for the iLO Advanced license (price may vary by region and vendor)
 - Internet connection for downloading required files
-- Basic understanding of server administration
+- Basic understanding of server administration and Docker
+
+**Important**: Modern browsers (Chrome, Firefox, Edge) do not support the legacy Java applets and ActiveX controls required by iLO2. You **must** use the Javafox Docker container to access the iLO2 web interface and virtual media functionality.
 
 ### Required Downloads
 
@@ -44,16 +47,86 @@ Before starting, ensure you have:
 
 ## Configuration Steps
 
-### 1. Update iLO2 to Version 2.33
+### 1. Setup Javafox Docker Container (Required for iLO2 Access)
+
+**Critical First Step**: The iLO2 web interface requires legacy Java applets and browser plugins that are no longer supported by modern browsers. The Javafox Docker container provides an old Firefox browser environment that can properly access iLO2's web interface and virtual media features.
+
+#### Why Javafox is Required:
+
+- iLO2 was designed in the late 2000s and relies on Java applets and legacy browser technologies
+- Modern browsers (Chrome, Firefox, Edge, Safari) have removed support for these technologies for security reasons
+- Without Javafox, you **cannot** access iLO2's virtual media, remote console, or many administrative features
+- Javafox provides a containerized old Firefox browser that still supports these legacy technologies
+
+#### Installation Steps:
+
+1. **Install Docker on Your Local Computer** (if not already installed)
+   
+   On Ubuntu/Debian:
+   ```bash
+   # Update package index
+   sudo apt update
+   
+   # Install Docker
+   sudo apt install -y docker.io
+   
+   # Start Docker service
+   sudo systemctl start docker
+   sudo systemctl enable docker
+   
+   # Add your user to docker group (to run without sudo)
+   sudo usermod -aG docker $USER
+   newgrp docker
+   ```
+   
+   On macOS:
+   - Download and install Docker Desktop from [docker.com](https://www.docker.com/products/docker-desktop)
+   
+   On Windows:
+   - Download and install Docker Desktop from [docker.com](https://www.docker.com/products/docker-desktop)
+
+2. **Pull and Run the Javafox Docker Container**
+   ```bash
+   # Pull the Javafox image (old Firefox with Java support)
+   docker pull jlesage/firefox:v1.17.0
+   
+   # Run Javafox container with web interface on port 5800
+   docker run -d \
+     --name javafox \
+     -p 5800:5800 \
+     -v /tmp/javafox:/config:rw \
+     jlesage/firefox:v1.17.0
+   ```
+
+3. **Access Javafox**
+   - Open your modern browser and go to: `http://localhost:5800`
+   - You will see a Firefox browser running in your browser window
+   - This Firefox instance supports the legacy Java applets needed for iLO2
+
+4. **Access iLO2 Through Javafox**
+   - In the Javafox browser window, navigate to your iLO2 IP address: `https://<ilo-ip-address>`
+   - Accept the security certificate warning (iLO2 uses self-signed certificates)
+   - You can now log in and use all iLO2 features including virtual media
+   - **Keep this Javafox container running** throughout the configuration process
+
+5. **Alternative: Use Javafox on a Different Machine**
+   - If your main computer can't run Docker, install Javafox on another machine
+   - Make sure that machine has network access to the iLO2 IP address
+   - Access Javafox via `http://<docker-host-ip>:5800` from any browser
+
+**Note**: All subsequent steps that require accessing the iLO2 web interface must be done through the Javafox browser.
+
+### 2. Update iLO2 to Version 2.33
 
 The Integrated Lights-Out (iLO) is HP's remote management solution. Updating to the latest version ensures compatibility and security.
 
 #### Steps:
 
-1. **Access iLO2 Web Interface**
-   - Connect to your iLO2 IP address via web browser
+1. **Access iLO2 Web Interface via Javafox**
+   - Open Javafox in your browser: `http://localhost:5800`
+   - In the Javafox Firefox browser, navigate to: `https://<ilo-ip-address>`
    - Default credentials are often on a pull-out tag on the server
-   - URL format: `https://<ilo-ip-address>`
+   - Accept the self-signed certificate warning
 
 2. **Check Current iLO Version**
    - Log into iLO web interface
@@ -73,7 +146,7 @@ The Integrated Lights-Out (iLO) is HP's remote management solution. Updating to 
    - iLO will automatically reboot after the update
    - Reconnect and verify the new version (2.33)
 
-### 2. Obtain iLO Advanced License
+### 3. Obtain iLO Advanced License
 
 The iLO Advanced license is required for virtual media functionality, which allows you to mount ISO images remotely.
 
@@ -100,7 +173,7 @@ The iLO Advanced license is required for virtual media functionality, which allo
    - Click **Activate**
    - Verify that "Advanced" features are now available
 
-### 3. Update BIOS and Dependencies with HP SPP
+### 4. Update BIOS and Dependencies with HP SPP
 
 The HP Service Pack for ProLiant (SPP) is a comprehensive collection of firmware and system software updates.
 
@@ -139,7 +212,7 @@ The HP Service Pack for ProLiant (SPP) is a comprehensive collection of firmware
    - Verify BIOS version has been updated
    - Check iLO for updated firmware versions
 
-### 4. Install Ubuntu Server 24.04.5 LTS
+### 5. Install Ubuntu Server 24.04.5 LTS
 
 With updated firmware and iLO Advanced license, you can now install Ubuntu Server via virtual media.
 
@@ -183,64 +256,18 @@ With updated firmware and iLO Advanced license, you can now install Ubuntu Serve
      ```
    - Configure additional settings as needed
 
-### 5. Install Docker
-
-Docker is required for containerized applications, including Javafox.
-
-#### Installation Steps:
-
-1. **Install Docker Using Official Repository**
-   ```bash
-   # Update package index
-   sudo apt update
-   
-   # Install prerequisites
-   sudo apt install -y ca-certificates curl gnupg lsb-release
-   
-   # Add Docker's official GPG key
-   sudo install -m 0755 -d /etc/apt/keyrings
-   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-   sudo chmod a+r /etc/apt/keyrings/docker.gpg
-   
-   # Set up Docker repository
-   echo \
-     "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-     $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-   
-   # Install Docker Engine
-   sudo apt update
-   sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-   ```
-
-2. **Verify Docker Installation**
-   ```bash
-   sudo docker run hello-world
-   ```
-
-3. **Add User to Docker Group** (optional, for non-root access)
-   ```bash
-   sudo usermod -aG docker $USER
-   newgrp docker
-   ```
-
-4. **Install Docker Compose** (if not already included)
-   ```bash
-   # Docker Compose is typically included with Docker Engine
-   docker compose version
-   ```
-
-5. **Configure Docker for Javafox**
-   - Javafox is a containerized application
-   - Follow Javafox-specific documentation for deployment
-   - Refer to the official Javafox documentation for the correct image name and configuration
-   - General Docker deployment pattern:
-     ```bash
-     # Example - replace with actual image name from Javafox documentation
-     docker pull [registry/javafox-image:tag]
-     docker run -d --name javafox [registry/javafox-image:tag]
-     ```
-
 ## Troubleshooting
+
+### Javafox / Docker Issues
+
+**Problem**: Cannot access Javafox at localhost:5800
+- **Solution**: Ensure Docker container is running: `docker ps | grep javafox`. If not running, restart it: `docker start javafox`
+
+**Problem**: Javafox shows but iLO2 doesn't load
+- **Solution**: Check network connectivity from Docker container to iLO2 IP. Verify iLO2 IP address is correct and iLO2 is powered on.
+
+**Problem**: Java applets don't work in Javafox
+- **Solution**: The jlesage/firefox image should have Java support. If issues persist, try an alternative image like `jlesage/firefox:v1.17.0` or earlier versions.
 
 ### iLO Issues
 
@@ -265,14 +292,6 @@ Docker is required for containerized applications, including Javafox.
 
 **Problem**: Installer cannot find hard drives
 - **Solution**: Check RAID configuration in Smart Array controller (F8 during POST), ensure drives are properly configured in a RAID array
-
-### Docker Issues
-
-**Problem**: Permission denied when running Docker commands
-- **Solution**: Either run with `sudo` or add your user to the docker group: `sudo usermod -aG docker $USER`
-
-**Problem**: Docker service won't start
-- **Solution**: Check system logs: `sudo journalctl -u docker`, ensure virtualization is enabled in BIOS if using VMs
 
 ## Resources
 
