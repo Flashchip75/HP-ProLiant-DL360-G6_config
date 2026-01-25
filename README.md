@@ -31,7 +31,7 @@ Before starting, ensure you have:
 
 - HP ProLiant DL360 G6 server with network connectivity
 - Access to the iLO2 web interface
-- Approximately 11€ for the iLO Advanced license
+- Approximately 11€ for the iLO Advanced license (price may vary by region and vendor)
 - Internet connection for downloading required files
 - Basic understanding of server administration
 
@@ -87,10 +87,11 @@ The iLO Advanced license is required for virtual media functionality, which allo
 #### How to Obtain:
 
 1. **Purchase the License**
-   - Cost: Approximately 11€
+   - Cost: Approximately 11€ (price may vary by region, vendor, and current promotions)
    - Available from HP or authorized resellers
    - Search for "HP iLO Advanced License" or "iLO2 Advanced License"
    - You will receive a license key after purchase
+   - **Note**: Check if your organization has existing licenses or enterprise agreements before purchasing
 
 2. **Install the License**
    - Log into iLO2 web interface
@@ -231,10 +232,12 @@ Docker is required for containerized applications, including Javafox.
 5. **Configure Docker for Javafox**
    - Javafox is a containerized application
    - Follow Javafox-specific documentation for deployment
-   - Typically involves running:
+   - Refer to the official Javafox documentation for the correct image name and configuration
+   - General Docker deployment pattern:
      ```bash
-     docker pull <javafox-image>
-     docker run -d --name javafox <javafox-image>
+     # Example - replace with actual image name from Javafox documentation
+     docker pull [registry/javafox-image:tag]
+     docker run -d --name javafox [registry/javafox-image:tag]
      ```
 
 ## Troubleshooting
