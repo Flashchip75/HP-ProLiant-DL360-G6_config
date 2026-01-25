@@ -1,0 +1,1 @@
+# HP-ProLiant-DL360-G6_config
