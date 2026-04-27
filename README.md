@@ -99,7 +99,7 @@ If your iLO version is **below 2.0**, update **step by step**:
 
 Example upgrade path that worked for me:
 
-```
+```txt
 1.00 → 1.50 → 1.80 → 2.00 → 2.33
 ```
 
@@ -107,7 +107,7 @@ Example upgrade path that worked for me:
 
 You can upload `.rpm` files via:
 
-```
+```txt
 iLO Web GUI → Administration → Firmware Update
 ```
 
@@ -122,7 +122,7 @@ The BIOS has a **backup ROM**, so updating it is safer than usual.
 Officially, BIOS updates require an HP service contract.
 However, this ISO worked for me:
 
-**HP SPP 2017.04.0**
+#### HP SPP 2017.04.0
 
 * Source: [https://archive.org/details/spp2017040](https://archive.org/details/spp2017040)
 * Size: ~6.6 GB
@@ -149,6 +149,14 @@ a434acaac2561169c1bd78f2c02177c43e7eb5ab0b35c049f54d47969f138d43
 CertUtil -hashfile 871795_001_spp-2017.04.0-SPP2017040.2017_0420.14.iso MD5
 CertUtil -hashfile 871795_001_spp-2017.04.0-SPP2017040.2017_0420.14.iso SHA1
 CertUtil -hashfile 871795_001_spp-2017.04.0-SPP2017040.2017_0420.14.iso SHA256
+```
+
+### Verify on Linux
+
+```shell
+md5sum 871795_001_spp-2017.04.0-SPP2017040.2017_0420.14.iso
+sha1sum 871795_001_spp-2017.04.0-SPP2017040.2017_0420.14.iso
+sha256sum 871795_001_spp-2017.04.0-SPP2017040.2017_0420.14.iso
 ```
 
 ---
@@ -188,9 +196,10 @@ After activating the license:
 2. Press **F11** for one-time boot menu
 3. Select:
 
-   ```
+   ```txt
    (1) CD
    ```
+
 4. The server now boots from the mounted ISO
 
 Run through the SPP update process.
@@ -208,9 +217,9 @@ After firmware updates:
 
 | OS             | Status                     |
 | -------------- | -------------------------- |
-| Ubuntu 24.04.3 | ❌ NIC issues               |
-| Ubuntu 22.04.5 | ✅ Works                    |
-| RHEL 9.6       | ❌ Hardware incompatibility |
+| Ubuntu 24.04.3 | ❌ NIC issues              |
+| Ubuntu 22.04.5 | ✅ Works                   |
+| RHEL 9.6       | ❌ Hardware incompatibility|
 | Rocky Linux 9  | 🔜 Planned                 |
 
 ⚠️ Booting is **very slow** compared to a Dell R710 — seems normal for this HP generation.
