@@ -219,6 +219,7 @@ After firmware updates:
 | -------------- | -------------------------- |
 | Ubuntu 24.04.3 | ❌ NIC issues              |
 | Ubuntu 22.04.5 | ✅ Works                   |
+| Alpine 3.23.4  | ✅ Works                   |
 | RHEL 9.6       | ❌ Hardware incompatibility|
 | Rocky Linux 9  | 🔜 Planned                 |
 
